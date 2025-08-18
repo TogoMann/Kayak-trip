@@ -1,34 +1,34 @@
 <?php
-session_start();
-require_once('../includes/db.php');
+if (session_status() === PHP_SESSION_NONE) session_start();
 
-if (isset($_POST['email'], $_POST['password']) && !empty($_POST['email']) && !empty($_POST['password'])) {
-    $email = htmlspecialchars(trim($_POST['email']));
-    $password = $_POST['password'];
+$root = dirname(__DIR__);
+$paths = [$root . '/include/db.php', $root . '/includes/db.php'];
+$found = false;
+foreach ($paths as $p) {
+    if (file_exists($p)) { require_once $p; $found = true; break; }
+}
+if (!$found) { die('Fichier db.php introuvable dans /include ou /includes'); }
 
-    $stmt = $pdo->prepare("SELECT * FROM utilisateur WHERE email = ?");
-    $stmt->execute([$email]);
-
-    if ($stmt->rowCount() === 1) {
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (password_verify($password, $user['mot_de_passe'])) {
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_nom'] = $user['nom'];
-            $_SESSION['user_role'] = $user['role'];
-
-            if ($user['role'] === 'admin') {
-                header('Location: ../admin/dashboard.php');
-            } else {
-                header('Location: ../page/home.php');
-            }
-            exit;
-        }
-    }
-
-    header('Location: ../page/login.php?error=login');
-    exit;
-} else {
-    header('Location: ../page/login.php?error=missing');
+$email = $_POST['email'] ?? '';
+$pass = $_POST['password'] ?? '';
+if ($email === '' || $pass === '') {
+    header('Location: /page/login.php?error=missing');
     exit;
 }
+
+$stmt = $pdo->prepare('SELECT id, mot_de_passe, role FROM utilisateur WHERE email = ? LIMIT 1');
+$stmt->execute([$email]);
+$u = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if ($u && password_verify($pass, $u['mot_de_passe'])) {
+    $_SESSION['user_id'] = $u['id'];
+    if ($u['role'] === 'admin') {
+        header('Location: /admin/');
+        exit;
+    }
+    header('Location: /');
+    exit;
+}
+
+header('Location: /page/login.php?error=login');
+exit;

@@ -1,8 +1,20 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+if (session_status() === PHP_SESSION_NONE) {session_start();}
+$root = __DIR__ . '/..';
+$paths = [$root . '/include/db.php', $root . '/includes/db.php'];
+foreach ($paths as $p) { if (file_exists($p)) { require_once $p; break; } }
+$isAdmin = false;
+if (isset($_SESSION['user_id']) && isset($pdo)) {
+    $s = $pdo->prepare('SELECT role FROM utilisateur WHERE id = ? LIMIT 1');
+    $s->execute([$_SESSION['user_id']]);
+    $r = $s->fetch(PDO::FETCH_ASSOC);
+    $isAdmin = $r && $r['role'] === 'admin';
 }
 ?>
+<?php if ($isAdmin): ?>
+<a href="/admin/" class="btn btn-dark position-fixed shadow" style="right:16px;bottom:16px;z-index:1050;">Mode admin</a>
+<?php endif; ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
