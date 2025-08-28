@@ -38,7 +38,7 @@ if (!empty($hebsSel)) {
   $ids = array_map('intval', array_column($hebsSel, 'hebergement_id'));
   if ($ids) {
     $in = implode(',', array_fill(0, count($ids), '?'));
-    $q = $pdo->prepare("SELECT id, nom, point_arret_id, COALESCE(prix_base, prix) AS prix_nuit, capacite FROM hebergement WHERE id IN ($in)");
+    $q = $pdo->prepare("SELECT id, nom, point_arret_id, COALESCE(prix_base, prix_base) AS prix_nuit, capacite FROM hebergement WHERE id IN ($in)");
     $q->execute($ids);
     while ($h = $q->fetch(PDO::FETCH_ASSOC)) $hebergements[$h['id']] = $h;
   }
